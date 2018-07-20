@@ -1,0 +1,926 @@
+<apex:page controller="CommunitiesSelfRegCustomController" 
+           title="Self Registration" 
+           standardStylesheets="false"
+           lightningStylesheets="true"
+           showHeader="false"
+           sidebar="false"  
+           applyHTMLTag="false"
+           applyBodyTag="false" 
+           language="en-US" 
+           docType="html-5.0">
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="x-ua-compatible" content="ie=edge" />
+        <title>Self Registration</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <style>
+            body { 
+                background-color: {!backgroundColor};
+                font-family: Serif !important;
+                color: black !important;
+            }
+            h2 { 
+                font-family: Serif !important;
+                color: black !important;
+            }
+            label {
+                font-size: 19px !important;
+                font-family: Serif !important;
+                color: black !important;
+            }
+            .slds-text-heading_medium {
+                font-family: Serif !important;
+                color: black !important;
+            }
+            .slds-form-element {
+                margin: auto;
+                max-width: 500px;
+            }
+        </style>
+        <style>
+        .msgIcon {
+            display: none!important
+        }
+        .customMessage * {
+            color: #fff!important
+        }
+        .customMessage {
+            margin: 5px 0!important;
+            max-width: 1280px;
+            opacity: 1!important;
+            width: 100%;
+            font-size: 12px;
+            border: 0px;
+            padding-left: 10px;
+        }
+        .message {
+            opacity: .1
+        }
+        </style>        
+        
+        <!--jQuery CDN-->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script>
+            var j$ = jQuery.noConflict();
+        
+            j$(document).ready(function(){
+               overridePageMessages();    
+            });
+                 
+            function overridePageMessages(){    
+                var textureEffect = '';
+                //Uncomment below line for texture effect on page messages
+                //textureEffect = 'slds-theme--alert-texture';
+                              
+                j$('.warningM3').addClass('slds-notify slds-notify_toast slds-theme--warning customMessage '+textureEffect);          
+                j$('.confirmM3').addClass('slds-notify slds-notify_alert slds-theme--success  customMessage '+textureEffect);    
+                j$('.errorM3').addClass('slds-notify slds-notify_alert slds-theme--error customMessage '+textureEffect);                  
+                j$('.infoM3').addClass('slds-notify slds-notify_toast customMessage '+textureEffect);    
+                                  
+                j$('.errorM3').removeClass('errorM3'); 
+                j$('.confirmM3').removeClass('confirmM3'); 
+                j$('.infoM3').removeClass('infoM3');   
+                j$('.warningM3').removeClass('warningM3');  
+            }
+        </script>        
+        <apex:slds />
+    </head>
+    
+    <body>   
+
+    <div class="slds-scope">
+    <div class="slds-box slds-theme_default">
+
+    <div style="text-align:center;">
+        <apex:image url="{!$Resource.sdwpLogo}"/>
+    </div>
+
+    <apex:pageMessages id="pageMessages" />
+
+    <apex:form >
+        <apex:outputPanel id="top" styleClass="slds" rendered="{!userAdded != true}">
+            <apex:outputPanel styleClass="slds-grid slds-wrap" rendered="{!currentPage == 0}">
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_medium">
+                        <div class="slds-text-heading_medium slds-text-align_center"><b>Contact Information</b></div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>First name</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.FirstName}" required="true" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>Last name</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.LastName}" required="true" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>Email</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Email}" required="true" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <apex:outputPanel layout="none" rendered="{!selfSetPassword == true}">
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>Password</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputSecret id="password" value="{!password}" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>Confirm Password</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputSecret id="confirmPassword" value="{!confirmPassword}" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="g-recaptcha" data-sitekey="{!siteKey}"></div>
+                            <script src='https://www.google.com/recaptcha/api.js'></script>
+                        </div>
+                    </div>
+                    </apex:outputPanel>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>Mobile phone</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.MobilePhone}" required="true" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Opt_in_to_SMS__c}" label="Can we send you text messages?" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Can we send you text messages?</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">Other phone</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.OtherPhone}" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">How did you hear about us?</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Referral_Source__c}" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel styleClass="slds-grid slds-wrap" rendered="{!currentPage == 1}">
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_medium">
+                        <div class="slds-text-heading_medium slds-text-align_center"><b>Address</b></div>                        
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">Street</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.MailingStreet}" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>City</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.MailingCity}" required="true" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>State/Province</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.MailingState}" required="true" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">ZIP/Postal Code</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.MailingPostalCode}" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.No_Fixed_Address__c}" label="I do not have a permanent address." />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">I do not have a permanent address.</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+            </apex:outputPanel>
+                        
+            <apex:outputPanel styleClass="slds-grid slds-wrap" rendered="{!currentPage == 2}">
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_medium">
+                        <div class="slds-text-heading_medium slds-text-align_center"><b>Household Resources</b></div>                        
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <h2>Check a box for each resource you or your family already receives. If you're not sure about any option, just skip it.</h2>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Cash_Aid__c}" label="Cash aid" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Cash aid</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.MediCal_Participant__c}" label="MediCal" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">MediCal</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Women_Infants_Children_WIC__c}" label="Women, Infants, Children (WIC)" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Women, Infants, Children (WIC)</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.CalFresh_Participant__c}" label="CalFresh/SNAP" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">CalFresh/SNAP</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.CalWORKS_Participant__c}" label="CalWORKS" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">CalWORKS</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Section_8_Housing_Public_Housing__c}" label="Section 8 housing/public housing" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Section 8 housing/public housing</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Lifeline_Affordable_Phone_Program__c}" label="Lifeline affordable phone program" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Lifeline affordable phone program</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Low_Income_Home_Energy_Assistance_Progra__c}" label="Low income home energy assistance program" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Low income home energy assistance program</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Refugee_Assistance__c}" label="Refugee assistance" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Refugee assistance</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Social_Security_disability_Insurance__c}" label="Social Security Disability Insurance" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Social Security Disability Insurance</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Social_Security_Income__c}" label="Social Security Income" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Social Security Income</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Unemployment_Insurance__c}" label="Unemployment Insurance" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Unemployment Insurance</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+            </apex:outputPanel>
+        
+            <apex:outputPanel styleClass="slds-grid slds-wrap" rendered="{!currentPage == 3}">
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_medium">
+                        <div class="slds-text-heading_medium slds-text-align_center"><b>Military Service Information</b></div>                        
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <h2>Select all that apply.</h2>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Active_Duty_or_Reserve__c}" label="I am active duty or reserve military" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">I am active duty or reserve military</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">I am a military veteran</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__Veteran__c}" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Parent_or_Guardian_Active_Duty_Veteran__c}" label="My parent or guardian is a member of the active duty or reserve military, or a veteran" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">My parent or guardian is a member of the active duty or reserve military, or a veteran</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Spouse_of_Active_Duty_or_Reserve__c}" label="My spouse is active duty or reserve military" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">My spouse is active duty or reserve military</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">My spouse is a military veteran</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__Veteran_Spouse__c}" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+            </apex:outputPanel>
+            
+            <apex:outputPanel styleClass="slds-grid slds-wrap" rendered="{!currentPage == 4}">
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_medium">
+                        <div class="slds-text-heading_medium slds-text-align_center"><b>Other Information</b></div>                        
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>Birthday</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Birthdate}" required="true" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Launchpad__CIF_Authorized_to_Work__c}" label="Are you authorized to work in the U.S.?" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Are you authorized to work in the U.S.?</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">Gender</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__Gender__c}" styleClass="slds-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Current_or_former_foster_youth__c}" label="Are you a foster youth?" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Are you a foster youth?</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">Please select each financial product you have in your own name:</label>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Checking_Account__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Checking account</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Savings_Account__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Savings account</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Prepaid_debit_card__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Prepaid debit card</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Credit_card__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Credit card</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Student_loan__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Student loan</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Personal_loan__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Personal loan</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Other__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Other</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel styleClass="slds-grid slds-wrap" rendered="{!currentPage == 5}">
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_medium">
+                        <div class="slds-text-heading_medium slds-text-align_center"><b>Race and Ethnicity</b></div>                        
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <h2>Select as many as you'd like.</h2>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Ethnicity_American_Indian_Alaska_Native__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">American Indian/Alaska Native</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Ethnicity_Asian__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Asian</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Ethnicity_Black_African_American__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Black/African American</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Ethnicity_Hispanic_Latino__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Hispanic/Latino</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Ethnicity_Native_Hawaiian_Other_Pacific__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Native Hawaiian/Other Pacific Islander</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Ethnicity_White__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">White</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Ethnicity_Prefer_Not_To_Disclose__c}" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Prefer not to disclose</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel styleClass="slds-grid slds-wrap" id="section-education-employment" rendered="{!currentPage == 6}">
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_medium">
+                        <div class="slds-text-heading_medium slds-text-align_center"><b>Education &amp; Employment Information</b></div>                        
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <h2>This information will help us connect you with jobs and services.</h2>
+                        </div>
+                    </div>        
+                    <apex:actionRegion >
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr>Are you currently in school?</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Attending_School__c}" required="true" styleClass="slds-input">
+                                    <apex:actionSupport event="onchange" action="{!setAttendingSchool}" rerender="section-education-employment,pageMessages"/>
+                                </apex:inputField>
+                            </div>
+                        </div>
+                    </div>
+                    </apex:actionRegion>
+                    <apex:outputPanel layout="none" rendered="{!attendingSchoolVisibility == true}">
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">What type of school are you in?</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.School_type__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">School name</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.School_Name__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">School name — Other</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.School_Other__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    </apex:outputPanel>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">What is the highest level of education any parent or guardian of yours has?</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.HighestLevel_of_Education_Parent_Guar__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <apex:actionRegion >
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">Are you currently employed?</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__CIF_Employment_Status_at_Program_Entry__c}" styleClass="slds-input">
+                                    <apex:actionSupport event="onchange" action="{!setEmploymentStatus}" rerender="section-education-employment,pageMessages"/>
+                                </apex:inputField>
+                            </div>
+                        </div>
+                    </div>
+                    </apex:actionRegion>
+                    <apex:outputPanel layout="none" rendered="{!employmentStatusVisibility == true}">
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">When did you stop working at your most recent job?</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Date_of_Separation_from_Last_Employer__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Launchpad__Underemployed__c}" label="I have a job, but do not make enough money to get by." />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">I have a job, but do not make enough money to get by.</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    </apex:outputPanel>
+            </apex:outputPanel>
+        
+            <apex:outputPanel styleClass="slds-grid slds-wrap" rendered="{!currentPage == 7}">
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_medium">
+                        <div class="slds-text-heading_medium slds-text-align_center"><b>Eligibility Information</b></div>                        
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <h2>Select "yes" for each statement that applies to you. Answering these questions helps us determine additional resources we can provide for you. You may skip any you'd like to.</h2>
+                        </div>
+                    </div>        
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">The first language I spoke was not English.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__CIF_English_Language_Learner__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">My reading, writing, or math skills are at or below the 8th grade level.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__CIF_Basic_Skills_Deficient__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">I recently lost the financial support of a family member.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__CIF_Displaced_Homemaker__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">I have a very hard time speaking, reading and writing in English.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__CIF_Low_Levels_of_Literacy__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">I have a disability.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__Disabled__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">A conflict between my cultural background and the culture in San Diego makes it hard for me to find work.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__CIF_Cultural_Barriers__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">I am pregnant or a single parent.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__CIF_Single_Parent__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">I lost my job, and don't have the skills needed to find a new one.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Lack_Necessary_Skills_to_reemployed__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">I have at least one parent or guardian who is employed.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.At_least_one_parent_or_guardian_employed__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">At least one of my parents or guardians is incarcerated (in jail or in prison).</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Parent_or_legal_guardian_is_incarcerated__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">In the past, I have abused substances.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Historical_substance_abuse_problem__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">I sometimes abuse substances even today.</label>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Currently_have_substance_abuse_problem__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">At least one of the "special housing statements" below applies to me.</label><br/>
+                            <label class="slds-form-element__label">- My family is having financial troubles, so we lost our home.</label><br/>
+                            <label class="slds-form-element__label">- I am staying with a family besides my own due to financial troubles.</label><br/>
+                            <label class="slds-form-element__label">- I live in a motel, hotel, trailer park, or camping ground as a result of my family's inability to find other housing.</label><br/>
+                            <label class="slds-form-element__label">- I live in an emergency or transitional shelter.</label><br/>
+                            <label class="slds-form-element__label">- I regularly sleep in a park, vehicle, public space, bus or train station, or abandoned building.</label><br/>
+                            <div class="slds-form-element__control">
+                                <apex:inputField value="{!newContact.Launchpad__Homeless__c}" styleClass="slds-input"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_xx-small">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label">
+                                I have read and agree to the <a href="http://workforce.org/terms-and-conditions">terms and conditions</a>.
+                            </label>
+                            <br/>
+                            <div class="slds-form-element__control">
+                                <label class="slds-checkbox">
+                                    <apex:inputCheckbox value="{!newContact.Community_Terms_Accepted__c}" label="Accept Terms and Conditions" />
+                                    <span class="slds-checkbox--faux"></span>
+                                    <label class="slds-form-element__label">Accept Terms and Conditions</label>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+            </apex:outputPanel>
+
+            <div class="slds-form-element">
+                <apex:commandButton action="{!previousPage}" value="Previous" styleClass="slds-button slds-button--brand" style="background-color:#F7931D; border-color:#F7931D; font-family:Serif;" rendered="{!currentPage>0}" />
+                <apex:commandButton action="{!nextPage}" value="Next" styleClass="slds-button slds-button--brand" style="background-color:#F7931D; border-color:#F7931D; font-family:Serif;" rendered="{!currentPage<maxPages}" />
+                <apex:commandButton action="{!registerUserCustom}" value="{!$Label.site.submit}" styleClass="slds-button slds-button--brand" style="background-color:#F7931D; border-color:#F7931D; font-family:Serif;" rendered="{!currentPage==maxPages}" />
+            </div>
+        </apex:outputPanel>
+    </apex:form>
+        
+    </div>
+    </div>
+
+    </body>
+    
+    <script>
+    /*SLDS Sections*/
+    j$('.slds-section__title').find('button').find('svg').css('transition', '0.3s');
+    j$('.slds-section__title').click(function(){
+        if(j$(this).parent().parent().hasClass('Minerva18SectionGroupSingle')){
+            if(j$(this).parent().hasClass('slds-is-open')){
+                j$(this).parent().removeClass('slds-is-open');
+                j$(this).parent().find('.slds-section__content').hide();
+            }
+            else{
+                j$(this).parent().parent().find('.slds-section').removeClass('slds-is-open');
+                j$(this).parent().parent().find('.slds-section__content').hide();
+                j$(this).parent().toggleClass('slds-is-open');
+                j$(this).parent().find('.slds-section__content').show();
+            }    
+        }
+        else{
+            j$(this).parent().toggleClass('slds-is-open');
+            if(j$(this).parent().hasClass('slds-is-open')){
+                j$(this).parent().find('.slds-section__content').show();
+            }else{
+                j$(this).parent().find('.slds-section__content').hide();
+            }
+        }
+    });
+    /*SLDS Sections*/
+    </script>
+</html>
+</apex:page>
