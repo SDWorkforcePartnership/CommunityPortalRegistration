@@ -1,0 +1,289 @@
+/**
+ * An apex page controller that supports self registration of users in communities that allow self registration
+ */
+public class CommunitiesSelfRegCustomController {
+    public String password {get; set {password = value == null ? value : value.trim(); } }
+    public String confirmPassword {get; set { confirmPassword = value == null ? value : value.trim(); } }
+    public Contact newContact {get; set;}
+    public String source {get;set;}
+    public String backgroundColor {get;set;}    
+    public static final String DEFAULT_LANG = 'en_US';
+    public static final String DEFAULT_LOCALE = 'en_US';
+    public static final String DEFAULT_EMAIL_ENC = 'ISO-8859-1';
+    public static final String DEFAULT_TIME_Z = 'America/Los_Angeles';
+    public Boolean userAdded {get;set;}
+    public Boolean selfSetPassword {get;set;}
+    private static String baseUrl = 'https://www.google.com/recaptcha/api/siteverify';
+    private static String secret = '6Lf-bl8UAAAAAE98R0qjP8gtQSAGhHUbLpfSqMcB';
+    
+    public CommunitiesSelfRegCustomController() {
+        selfSetPassword = true;
+        
+        String expid = ApexPages.currentPage().getParameters().get('expid');            
+        if (expId != null) {
+            Site.setExperienceId(expId); 
+        }
+        
+        userAdded = false;
+        
+        newContact = new Contact();
+        newContact.RecordTypeId = Schema.SObjectType.Contact.getRecordTypeInfosByName().get('Job Seeker').getRecordTypeId();
+        
+        if(String.isNotBlank(ApexPages.currentPage().getParameters().get('source'))) {
+          newContact.Launchpad__Referral_Source__c = ApexPages.currentPage().getParameters().get('source');
+        }
+        
+        //set some default values on the new contact
+        newContact.Opt_in_to_SMS__c = true;
+        newContact.Launchpad__Veteran__c = 'Please Select One';
+        newContact.Launchpad__Veteran_Spouse__c = 'Please Select One';
+        newContact.Launchpad__Gender__c = 'Please Select One';
+        newContact.Attending_School__c = 'Please Select One';
+        newContact.School_type__c = 'Please Select One';
+        newContact.School_Name__c = 'Please Select One';
+        newContact.HighestLevel_of_Education_Parent_Guar__c = 'Please Select One';
+        newContact.Launchpad__CIF_Employment_Status_at_Program_Entry__c = 'Please Select One';
+        newContact.Launchpad__CIF_English_Language_Learner__c = 'Please Select One';
+        newContact.Launchpad__CIF_Basic_Skills_Deficient__c = 'Please Select One';
+        newContact.Launchpad__CIF_Displaced_Homemaker__c = 'Please Select One';
+        newContact.Launchpad__CIF_Low_Levels_of_Literacy__c = 'Please Select One';
+        newContact.Launchpad__Disabled__c = 'Please Select One';
+        newContact.Launchpad__CIF_Cultural_Barriers__c = 'Please Select One';
+        newContact.Launchpad__CIF_Single_Parent__c = 'Please Select One';
+        newContact.Lack_Necessary_Skills_to_reemployed__c = 'Please Select One';
+        newContact.At_least_one_parent_or_guardian_employed__c = 'Please Select One';
+        newContact.Parent_or_legal_guardian_is_incarcerated__c = 'Please Select One';
+        newContact.Historical_substance_abuse_problem__c = 'Please Select One';
+        newContact.Currently_have_substance_abuse_problem__c = 'Please Select One';
+        newContact.Launchpad__Homeless__c = 'Please Select One';
+                                    
+        currentPage = 0;
+        maxPages = 7;
+        
+        Launchpad_Configuration__c launchpadConfiguration = Launchpad_Configuration__c.getInstance();
+    if(String.isNotBlank(launchpadConfiguration.Visualforce_Background_Color__c)) {
+            backgroundColor = launchpadConfiguration.Visualforce_Background_Color__c;
+        }
+        else {
+          backgroundColor = '#882844';
+        }
+    }
+    
+    public String siteKey {
+        get {
+            return  '6Lf-bl8UAAAAAFOhvUM-2VStD7L6M8BcOhAuIDEo';
+        }
+    }
+    
+    public String response {
+        get {
+            return ApexPages.currentPage().getParameters().get('g-recaptcha-response');
+        }
+    }
+    
+    public Integer currentPage {get;set;}
+    public Integer maxPages {get;set;}  //pages numbered 0 -> 7
+    public void nextPage() {
+        //check for Password on 1st page if required
+        if(currentPage == 0) {
+            if(selfSetPassword) {
+                if(String.isBlank(password)) {
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Please set your password.'));
+                    return;
+                }
+                
+                if (!isValidPassword()) {
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, Label.site.passwords_dont_match));
+                    return;
+                }
+                
+                try {
+                    String responseBody = makeRequest(baseUrl, 'secret='+secret+'&response='+response);
+                    String success = getValueFromJson(responseBody, 'success');
+                    if(!success.equals('true')) {
+                        ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Please verify the captcha'));
+                        return;
+                    }
+                }
+                catch(Exception e) {
+                    ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Could not verify the captcha'));
+                    ApexPages.addMessages(e);
+                    return;
+                }
+            } 
+        }
+        
+        if(currentPage < maxPages) {
+            currentPage++;
+        }
+    }
+    public void previousPage() {
+        if(currentPage > 0) {
+            currentPage--;
+        }        
+    }
+    
+    private boolean isValidPassword() {
+        return password == confirmPassword;
+    }
+    
+    public PageReference registerUserCustom() {
+        if(newContact.Community_Terms_Accepted__c != true) {
+      ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Please accept the Terms and Conditions before submitting.'));
+            return null;            
+        }
+
+        // it's okay if password is null - we'll send the user a random password in that case
+        if (!isValidPassword()) {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, Label.site.passwords_dont_match));
+            return null;
+        }    
+
+        try {
+            String accountId = [SELECT Id FROM Account WHERE Name = 'Job Seekers'].Id;
+            String profileId = [SELECT Id FROM Profile WHERE Name = 'Job Portal Community User'].Id;
+        
+            newContact.AccountId = accountId;
+            insert newContact;
+            
+            User newUser = new User(
+                FirstName = newContact.FirstName,
+                LastName = newContact.LastName,
+                Alias = genAlias(newContact.FirstName, newContact.LastName),
+                Email = newContact.Email,
+                Username = newContact.Email,
+                CommunityNickname = genNickname(newContact.Email),
+                ContactId = newContact.Id,
+                ProfileId = profileId,
+                TimeZoneSidKey = DEFAULT_TIME_Z,
+                LocaleSidKey = DEFAULT_LOCALE,
+                LanguageLocaleKey = DEFAULT_LANG,
+                EmailEncodingKey = DEFAULT_EMAIL_ENC
+          );
+            
+            newContact = new Contact();
+            
+            //insert newUser;
+            if(selfSetPassword) {
+              Site.createExternalUser(newUser, accountId, password);
+            }
+            else {
+                Site.createExternalUser(newUser, accountId);
+            }
+            
+            userAdded = true;
+            PageReference pageRef = new PageReference(URL.getSalesforceBaseUrl().toExternalForm() + '/s/self-reg-welcome');
+          return pageRef;
+        } catch(Exception e) {
+            ApexPages.addMessages(e);
+            System.debug(e);
+        }
+        
+        return null;
+    }
+
+    private static String makeRequest(String url, String body) {
+        HttpResponse response = null;
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint(url);
+        request.setMethod('POST');
+        request.setBody(body);
+        
+        try {
+            Http http = new Http();
+            response = http.send(request);
+            return response.getBody();
+        }
+        catch(Exception e) {
+            ApexPages.addMessages(e);
+        }
+        
+        return '{"success":false}';
+    }
+    
+    public static String getValueFromJson(String strJson, String field) {
+        JSONParser parser = JSON.createParser(strJson);
+        while(parser.nextToken() != null) {
+            if(parser.getCurrentToken() == JSONToken.FIELD_NAME) {
+                if(parser.getText() == field) {
+                    parser.nextToken();
+                    return parser.getText();
+                }
+            }
+        }
+        return null;
+    }
+    
+    /**
+    *   Generates an alias composed as the starting letter of the First Name followed by the
+    *   4 starting letters of the Last Name
+    */
+    private String genAlias(String fName, String lName) {
+        if (fname == null) {
+            fName = lName;
+        }
+        return fName.substring(0, 1).toLowerCase() + lName.substring(0, Math.min(4, lName.length())).toLowerCase(); 
+    }
+
+    /**
+    *   Generates a nickname based on the email local part
+    */
+    private String genNickname(String email) {
+        if (email != null) {
+            String nName = email.substring(0, email.indexOf('@'));
+            String nName2 = nName + generateRandomString(5);
+            List<User> existingUsers = [
+                SELECT CommunityNickname
+                FROM User
+                WHERE CommunityNickname in (:nName, :nName2)
+            ];
+            if (existingUsers.isEmpty()) {
+                return nName;
+            } else if (existingUsers.size() == 1) {
+                if (existingUsers[0].CommunityNickname == nName) {
+                    return nName2;
+                } else {
+                    return nName;
+                }
+            }   
+            return nName + generateRandomString(5);
+        }
+        return null;
+    } 
+    
+    public static String generateRandomString(Integer len) {
+        final String chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+        String randStr = '';
+        while (randStr.length() < len) {
+            Integer idx = Math.mod(Math.abs(Crypto.getRandomInteger()), 62);
+            randStr += chars.substring(idx, idx+1);
+        }
+        return randStr; 
+    }
+    
+    public Boolean attendingSchoolVisibility {
+        get {
+            if(attendingSchoolVisibility == null) {
+                attendingSchoolVisibility = false;
+            }
+            return attendingSchoolVisibility;
+        }
+        set;
+    }
+    public void setAttendingSchool() {
+        attendingSchoolVisibility = 'Yes'.equals(newContact.Attending_School__c);
+    }
+
+    public Boolean employmentStatusVisibility {
+        get {
+            if(employmentStatusVisibility == null) {
+                employmentStatusVisibility = false;
+            }
+            return employmentStatusVisibility;
+        }
+        set;
+    }
+    public void setEmploymentStatus() {
+        employmentStatusVisibility = newContact.Launchpad__CIF_Employment_Status_at_Program_Entry__c != null && newContact.Launchpad__CIF_Employment_Status_at_Program_Entry__c.startsWith('Employed');
+    }
+}
